@@ -1,5 +1,5 @@
 ## Fantata Socket Set
-A simple websocket library with client and server components & message acknowledgment / resend.
+A simple websocket library with client and server components & message acknowledgment / resend. Still a work in progress, so may have bugs and this readme may not be comprehensive.
 
 ### Installation
 ```
@@ -22,9 +22,22 @@ Initialise the service:
 SocketSet.init(server);
 ```
 
-Add your event listeners:
+Add your node event listeners:
 ```
 SocketSet.addListener('yourCode', data => {
   // do stuff here
+});
+```
+
+Send messages client side:
+```
+window.addEventListener("socketSetLoaded", function(e) {
+    
+    const app = e.detail;
+
+    app.wsSend({
+        "type": "newGame"
+    });
+
 });
 ```
