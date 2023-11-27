@@ -15,8 +15,8 @@ export default {
         });
     },
 
-    addListener() {
-        console.log(MessageHandler);
+    addListener(type, cb) {
+        MessageHandler.addListener(type, cb);
     }
 
 }
