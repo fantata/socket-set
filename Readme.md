@@ -2,12 +2,14 @@
 A simple websocket library with client and server components & message acknowledgment / resend.
 
 ### Installation
+```
 npm i fantata-socket-set
+```
 
 ### Usage
 Import the library server side:
 ```
-import SocketSet from 'socket-set';
+import SocketSet from 'fantata-socket-set';
 ```
 
 Include the cient side script:
