@@ -98,6 +98,14 @@ class ClientBus {
         ClientBus.instance.addClient(client);
     }    
 
+    broadcast(type, data, senderId) {
+        this.clients.forEach(client => {
+            if (client.id !== senderId) {
+                client.send(type, data, crypto.randomUUID());
+            }
+        });
+    }
+
 }
 
 export default new ClientBus();

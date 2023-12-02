@@ -31,20 +31,20 @@ class AcknowledgementBus {
      * Polls the Acknowledgement bus for messages that have not been acknowledged.
      */
     pollForAcks() {
-        let int = setInterval(() => {
-            if (this.acks.size) {
-                this.acks.forEach((ack) => {
-                    if (ack.attempts > 2) {
-                        console.log('Failed to send ack: ', ack);
-                        this.acks.delete(ack.id);
-                    } else {
-                        console.log('Resending msg: ', ack.message);
-                        this.clientBus.getClient(ack.clientId).resend(ack.message);
-                        ack.incrementAttempts();
-                    }
-                });
-            }
-        }, 1000);
+        // let int = setInterval(() => {
+        //     if (this.acks.size) {
+        //         this.acks.forEach((ack, key) => {
+        //             if (ack.attempts > 2) {
+        //                 console.log('Ack not received: ', key);
+        //                 this.acks.delete(key);
+        //             } else {
+        //                 console.log('Resending msg: ', ack.message.type, ack.message.uuid);
+        //                 this.clientBus.getClient(ack.clientId).resend(ack.message);
+        //                 ack.incrementAttempts();
+        //             }
+        //         });
+        //     }
+        // }, 1000);
     }
 
     /**
@@ -62,8 +62,10 @@ class AcknowledgementBus {
      * @param {string} uuid - The identifier of the acknowledgement message to remove.
      */
     removeAcknowledgement(uuid) {
-        this.acks.delete(uuid);
-        console.log(this.acks)
+        if (this.acks.has(uuid)) {
+            this.acks.delete(uuid);
+            console.log("Removed ack: ", uuid);
+        }
     }
 
 }

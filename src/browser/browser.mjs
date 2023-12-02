@@ -21,15 +21,16 @@ function app() {
 
             this.addListener('clientId', (data, uuid, clientId) => {
                 localStorage.setItem('clientId', clientId);
-                this.wsSend({type: "ACK", messageId: uuid});
+                this.sendAck(uuid);
             });
             
             this.ws.onmessage = (event) => {
 
                 const data = JSON.parse(event.data);
-                console.log('Recd message: ', data.type);
+                console.log('Recd message: ', data.type, data.uuid);
 
                 if (data.type == 'ACK') {
+                    console.log('Removing Ack for : ', data.messageId);
                     this.acks = this.acks.filter(ack => ack.id !== data.uuid);
                     return;
                 } else {
@@ -41,6 +42,11 @@ function app() {
             this.ws.onclose = () => console.log('WebSocket disconnected');
             this.ws.onerror = (error) => console.error('WebSocket Error:', error);
 
+        },
+
+        sendAck(uuid) {
+            console.log('Sending Ack for ' +  uuid);
+            this.wsSend({type: "ACK", messageId: uuid});
         },
 
         sendMessage(type, data = null) {
@@ -65,13 +71,19 @@ function app() {
 
         handleMessages(vals) {
             if (this.proc.indexOf(vals.uuid) < 0) {
-                this.proc.push(vals.uuid);
-                const type = vals.type;
-                const data = vals.data;
-                console.log('handleMessage', vals.type)
-                this.triggerEvent(type, data, vals.uuid, vals.clientId);
-            }
 
+                this.proc.push(vals.uuid);
+
+                const type = vals.type;
+                const clientId = vals.clientId;
+                const data = vals.data;
+                
+                if (this.eventHandlers[type]) {
+                    this.eventHandlers[type].forEach(handler => handler(data, vals.uuid, clientId));
+                    this.sendAck(vals.uuid);
+                }
+
+            }
         },
 
         addListener(eventType, handler) {
@@ -81,22 +93,22 @@ function app() {
             this.eventHandlers[eventType].push(handler);
         },
 
-        triggerEvent(eventType, data, uuid, clientId) {
-            if (this.eventHandlers[eventType]) {
-                this.eventHandlers[eventType].forEach(handler => handler(data, uuid, clientId));
-            }
-        },        
-
+        clientBroadcast(msg) {
+            msg.broadcast = true;
+            this.wsSend(msg);
+        },
+        
         wsSend(msg) {
 
             msg.uuid = crypto.randomUUID();
+            msg.clientId = localStorage.getItem('clientId');
             
             if (msg.type !== 'ACK') {
                 this.acks.push(Acknowledgement.create(msg));
+                console.log('Sending message: ', msg.type, msg.uuid);                
             }
             
             if(this.ws.readyState==1) {
-                console.log('Sending message: ', msg);
                 this.ws.send(JSON.stringify(msg));
             }
             
@@ -107,10 +119,10 @@ function app() {
                 if (this.acks.length > 0) {
                     this.acks.forEach((ack, i) => {
                         if (ack.attempts > 9) {
-                            console.log('Failed to send message: ', ack);
+                            console.log('Failed to send message: ', ack.type, ack.uuid);
                             this.acks.splice(i, 1);
                         } else {
-                            console.log('Resending message: ', ack.message);
+                            console.log('Resending message: ', ack.type, ack.uuid);
                             this.ws.send(JSON.stringify(ack.message));
                             ack.incrementAttempts();
                         }

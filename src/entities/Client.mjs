@@ -3,8 +3,6 @@ import AcknowledgementBus from '../busses/AcknowledgementBus.mjs';
 import MessageHandler from '../handlers/MessageHandler.mjs';
 import ClientBus from '../busses/ClientBus.mjs';
 
-import { v4 as uuidv4 } from 'uuid';
-
 class Client {
 
     constructor(ws, id = null) {
@@ -15,7 +13,7 @@ class Client {
         this.ws = ws;
 
         if (id === null) {
-            this.id = uuidv4();
+            this.id = crypto.randomUUID();
         } else {
             this.id = id;
         }
@@ -38,20 +36,21 @@ class Client {
         return this.attributes.get(key);
     }    
 
-    send(type, data = {}) {
+    send(type, data = {}, uuid = null) {
 
-        console.log('Sending message: ', type)
-        
         const msg = {
             type: type,
-            data: data
+            data: data,
+            uuid: uuid
         };
 
         msg.clientId = this.id;
         
         if (!msg.uuid) {
-            msg.uuid = uuidv4();
+            msg.uuid = crypto.randomUUID();
         }
+
+        console.log('Sending message: ', type, msg.uuid)
 
         AcknowledgementBus.addAcknowledgement(Acknowledgement.create(msg));
 
@@ -60,7 +59,12 @@ class Client {
 
     resend(msg = {}) {
         this.ws.send(JSON.stringify(msg));
-    }    
+    }
+
+    sendAck(uuid) {
+        console.log('Sending Ack for ' +  uuid);
+        this.ws.send(JSON.stringify({type: "ACK", messageId: uuid}));
+    }
 
 }
 

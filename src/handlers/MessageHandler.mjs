@@ -47,14 +47,24 @@ class MessageHandler {
 
             const data = JSON.parse(message);
 
-            console.log('Server received message:', data);
+            // console.log('***')
+            // console.log(client)
+            // console.log(data)
+            // console.log('***')
 
             if (data.type == 'ACK') {
+                //console.log('Server received message:', data.type, data.messageId);
                 AcknowledgementBus.removeAcknowledgement(data.messageId);
+            } else if(data.broadcast) {
+                console.log('Server received broadcast:', data.type, data.uuid);
+                await ClientBus.broadcast(data.type, {}, data.clientId);
+                client.sendAck(data.uuid);
             } else if (this.listeners[data.type]) {
-                await this.listeners[data.type](client, data);
+                console.log('Server received message:', data.type, data.uuid);
+                await this.listeners[data.type](data);
+                client.sendAck(data.uuid);
             } else {
-                console.log('No listener found for message:', data.type);
+                console.log('No listener found for message:', data.type, data.uuid);
             }
 
         } catch (err) {
