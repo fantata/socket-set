@@ -1,5 +1,4 @@
 import Acknowledgement from '../entities/Acknowledgement.mjs';
-import MessageHandler from '../handlers/MessageHandler.mjs';
 
 let clientId = null;
 const $ = document.querySelector.bind(document);
@@ -10,7 +9,6 @@ function app() {
         acks: [],
         proc: [],
         eventHandlers: {},
-        messageHandler: MessageHandler,
         ws: null,
         init() {
 
@@ -19,33 +17,35 @@ function app() {
 
             clientId = localStorage.getItem('clientId');
 
-            this.addListener('clientId', (data, uuid, clientId) => {
-                localStorage.setItem('clientId', clientId);
-                this.sendAck(uuid);
+            this.addListener('clientId', (vals) => {
+                localStorage.setItem('clientId', vals.clientId);
+                this.sendAck(vals.uuid);
+                let clientLoaded = new CustomEvent("clientReady");
+                window.dispatchEvent(clientLoaded);                
             });
             
             this.ws.onmessage = (event) => {
 
                 const data = JSON.parse(event.data);
-                console.log('Recd message: ', data.type, data.uuid);
 
                 if (data.type == 'ACK') {
-                    console.log('Removing Ack for : ', data.messageId);
+                    //console.log('Removing Ack for : ', data.messageId);
                     this.acks = this.acks.filter(ack => ack.id !== data.uuid);
                     return;
                 } else {
+                    //console.log('Recd message: ', data.type, data.uuid);
                     this.handleMessages(data);
                 }
 
             };
 
-            this.ws.onclose = () => console.log('WebSocket disconnected');
+            this.ws.onclose = (e) => console.log('WebSocket disconnected');
             this.ws.onerror = (error) => console.error('WebSocket Error:', error);
 
         },
 
         sendAck(uuid) {
-            console.log('Sending Ack for ' +  uuid);
+            //console.log('Sending Ack for ' +  uuid);
             this.wsSend({type: "ACK", messageId: uuid});
         },
 
@@ -64,22 +64,21 @@ function app() {
                 this.wsSend(item);
 
             } else {
-                console.error('WebSocket is not connected');
+                console.error('WebSocket is not connected on send ', type, data);
             }
 
         },
 
         handleMessages(vals) {
+
             if (this.proc.indexOf(vals.uuid) < 0) {
 
                 this.proc.push(vals.uuid);
 
                 const type = vals.type;
-                const clientId = vals.clientId;
-                const data = vals.data;
-                
+
                 if (this.eventHandlers[type]) {
-                    this.eventHandlers[type].forEach(handler => handler(data, vals.uuid, clientId));
+                    this.eventHandlers[type].forEach(handler => handler(vals));
                     this.sendAck(vals.uuid);
                 }
 
@@ -105,7 +104,7 @@ function app() {
             
             if (msg.type !== 'ACK') {
                 this.acks.push(Acknowledgement.create(msg));
-                console.log('Sending message: ', msg.type, msg.uuid);                
+                //console.log('Sending message: ', msg.type, msg.uuid);                
             }
             
             if(this.ws.readyState==1) {
@@ -119,16 +118,14 @@ function app() {
                 if (this.acks.length > 0) {
                     this.acks.forEach((ack, i) => {
                         if (ack.attempts > 9) {
-                            console.log('Failed to send message: ', ack.type, ack.uuid);
+                            //console.log('Failed to send message: ', ack.message.type, ack.message.uuid);
                             this.acks.splice(i, 1);
                         } else {
-                            console.log('Resending message: ', ack.type, ack.uuid);
+                            //console.log('Resending message: ', ack.message.type, ack.message.uuid);
                             this.ws.send(JSON.stringify(ack.message));
                             ack.incrementAttempts();
                         }
                     });
-                } else {
-                    console.log('NO ACKS');
                 }
             }, 1500);
         }

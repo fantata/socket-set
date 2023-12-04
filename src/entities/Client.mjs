@@ -50,7 +50,7 @@ class Client {
             msg.uuid = crypto.randomUUID();
         }
 
-        console.log('Sending message: ', type, msg.uuid)
+        //console.log('Sending message: ', type, msg.uuid)
 
         AcknowledgementBus.addAcknowledgement(Acknowledgement.create(msg));
 
@@ -62,7 +62,7 @@ class Client {
     }
 
     sendAck(uuid) {
-        console.log('Sending Ack for ' +  uuid);
+        //console.log('Sending Ack for ' +  uuid);
         this.ws.send(JSON.stringify({type: "ACK", messageId: uuid}));
     }
 

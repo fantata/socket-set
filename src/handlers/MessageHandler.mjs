@@ -1,5 +1,6 @@
 import ClientBus from '../busses/ClientBus.mjs';
 import AcknowledgementBus from '../busses/AcknowledgementBus.mjs';
+import { eventBus } from '../busses/EventBus.mjs';
 
 /**
  * Handles the processing of messages for the WebSocket service.
@@ -56,11 +57,12 @@ class MessageHandler {
                 //console.log('Server received message:', data.type, data.messageId);
                 AcknowledgementBus.removeAcknowledgement(data.messageId);
             } else if(data.broadcast) {
-                console.log('Server received broadcast:', data.type, data.uuid);
-                await ClientBus.broadcast(data.type, {}, data.clientId);
+                //console.log('Server received broadcast:', data.type, data.uuid);
+                await ClientBus.broadcast(data.type, data, data.clientId);
                 client.sendAck(data.uuid);
+                eventBus.emit('broadcast:' + data.type, data);
             } else if (this.listeners[data.type]) {
-                console.log('Server received message:', data.type, data.uuid);
+                //console.log('Server received message:', data.type, data.uuid);
                 await this.listeners[data.type](data);
                 client.sendAck(data.uuid);
             } else {

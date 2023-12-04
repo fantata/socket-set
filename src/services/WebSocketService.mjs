@@ -15,6 +15,10 @@ class WebSocketService {
 		client.send('clientId');
 	}
 
+    sendToClient(clientId, type, stage) {
+        ClientBus.getClient(clientId).send(type, stage);
+    }	
+
 }
 
 export default new WebSocketService();

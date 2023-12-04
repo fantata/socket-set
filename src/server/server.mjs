@@ -1,5 +1,6 @@
 import WebSocketService from '../services/WebSocketService.mjs';
 import MessageHandler from '../handlers/MessageHandler.mjs';
+import { eventBus } from '../busses/EventBus.mjs';
 
 export default {
 
@@ -17,6 +18,14 @@ export default {
 
     addListener(type, cb) {
         MessageHandler.addListener(type, cb);
+    },
+
+    eventBus() {
+        return eventBus;
+    },
+
+    sendToClient(clientId, type, stage) {
+        WebSocketService.sendToClient(clientId, type, stage);
     }
 
 }
