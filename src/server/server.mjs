@@ -5,7 +5,8 @@ import { eventBus } from '../busses/EventBus.mjs';
 export default {
 
     init(server) {
-        this.registerUpgradeHandler(server);
+        WebSocketService.useServer(server);
+        //this.registerUpgradeHandler(server);
     },
 
     registerUpgradeHandler(server) {

@@ -2,7 +2,6 @@ import Acknowledgement from './Acknowledgement.mjs';
 import AcknowledgementBus from '../busses/AcknowledgementBus.mjs';
 import MessageHandler from '../handlers/MessageHandler.mjs';
 import ClientBus from '../busses/ClientBus.mjs';
-
 class Client {
 
     constructor(ws, id = null) {
@@ -50,8 +49,6 @@ class Client {
             msg.uuid = crypto.randomUUID();
         }
 
-        //console.log('Sending message: ', type, msg.uuid)
-
         AcknowledgementBus.addAcknowledgement(Acknowledgement.create(msg));
 
         this.ws.send(JSON.stringify(msg));
@@ -62,7 +59,6 @@ class Client {
     }
 
     sendAck(uuid) {
-        //console.log('Sending Ack for ' +  uuid);
         this.ws.send(JSON.stringify({type: "ACK", messageId: uuid}));
     }
 

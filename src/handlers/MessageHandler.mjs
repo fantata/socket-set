@@ -26,7 +26,7 @@ class MessageHandler {
      * 
      * @param {string} code - The message code to listen for.
      * @param {function} callback - The callback function to execute when the message is received.
-     */    
+     */
     addListener(code, callback) {
         this.listeners[code] = callback;
     }
@@ -48,22 +48,14 @@ class MessageHandler {
 
             const data = JSON.parse(message);
 
-            // console.log('***')
-            // console.log(client)
-            // console.log(data)
-            // console.log('***')
-
             if (data.type == 'ACK') {
-                //console.log('Server received message:', data.type, data.messageId);
                 AcknowledgementBus.removeAcknowledgement(data.messageId);
             } else if(data.broadcast) {
-                //console.log('Server received broadcast:', data.type, data.uuid);
                 await ClientBus.broadcast(data.type, data, data.clientId);
                 client.sendAck(data.uuid);
                 eventBus.emit('broadcast:' + data.type, data);
             } else if (this.listeners[data.type]) {
-                //console.log('Server received message:', data.type, data.uuid);
-                await this.listeners[data.type](data);
+                await this.listeners[data.type](data, client);
                 client.sendAck(data.uuid);
             } else {
                 console.log('No listener found for message:', data.type, data.uuid);

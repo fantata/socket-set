@@ -4,8 +4,15 @@ import ClientBus from '../busses/ClientBus.mjs';
 
 class WebSocketService {
 
-	constructor() {
+	makeServer() {
 		this.wss = new WebSocketServer({ noServer: true });
+		this.wss.on('connection', this.handleConnection.bind(this));
+	}
+
+	useServer(httpsServer) {
+		this.wss = new WebSocketServer({
+			server: httpsServer
+		});
 		this.wss.on('connection', this.handleConnection.bind(this));
 	}
 
@@ -15,8 +22,8 @@ class WebSocketService {
 		client.send('clientId');
 	}
 
-    sendToClient(clientId, type, stage) {
-        ClientBus.getClient(clientId).send(type, stage);
+    sendToClient(clientId, type, data) {
+        ClientBus.getClient(clientId).send(type, data);
     }	
 
 }

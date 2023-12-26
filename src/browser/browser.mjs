@@ -1,39 +1,49 @@
 import Acknowledgement from '../entities/Acknowledgement.mjs';
-
 let clientId = null;
 const $ = document.querySelector.bind(document);
 
-function app() {
+const fantataSocketSet = function() {
     return {
         title: 'websocketAck',
         acks: [],
         proc: [],
         eventHandlers: {},
         ws: null,
-        init() {
-
-            this.ws = new WebSocket('ws://localhost:3600');
+        init(url) {
+            this.ws = new WebSocket(url);
             this.procAcks();
 
             clientId = localStorage.getItem('clientId');
 
+            if (clientId) {
+                this.wsSend({type: "PICKUP", clientId: clientId});
+                this.addListener('PICKEDUP', () => {
+                    let clientLoaded = new CustomEvent("clientReady");
+                    window.dispatchEvent(clientLoaded);                                  
+                });
+            }
+
             this.addListener('clientId', (vals) => {
-                localStorage.setItem('clientId', vals.clientId);
+
                 this.sendAck(vals.uuid);
-                let clientLoaded = new CustomEvent("clientReady");
-                window.dispatchEvent(clientLoaded);                
+
+                if (!clientId) {
+                    localStorage.setItem('clientId', vals.clientId);
+                    let clientLoaded = new CustomEvent("clientReady");
+                    window.dispatchEvent(clientLoaded);
+                }
+
             });
             
             this.ws.onmessage = (event) => {
 
                 const data = JSON.parse(event.data);
-
                 if (data.type == 'ACK') {
-                    //console.log('Removing Ack for : ', data.messageId);
-                    this.acks = this.acks.filter(ack => ack.id !== data.uuid);
-                    return;
+                    this.acks = this.acks.filter(ack => {
+                        return ack.message.uuid != data.messageId;
+                    });
+                    return;      
                 } else {
-                    //console.log('Recd message: ', data.type, data.uuid);
                     this.handleMessages(data);
                 }
 
@@ -45,7 +55,6 @@ function app() {
         },
 
         sendAck(uuid) {
-            //console.log('Sending Ack for ' +  uuid);
             this.wsSend({type: "ACK", messageId: uuid});
         },
 
@@ -104,10 +113,9 @@ function app() {
             
             if (msg.type !== 'ACK') {
                 this.acks.push(Acknowledgement.create(msg));
-                //console.log('Sending message: ', msg.type, msg.uuid);                
             }
             
-            if(this.ws.readyState==1) {
+            if(this.ws.readyState==1) {             
                 this.ws.send(JSON.stringify(msg));
             }
             
@@ -118,10 +126,8 @@ function app() {
                 if (this.acks.length > 0) {
                     this.acks.forEach((ack, i) => {
                         if (ack.attempts > 9) {
-                            //console.log('Failed to send message: ', ack.message.type, ack.message.uuid);
                             this.acks.splice(i, 1);
                         } else {
-                            //console.log('Resending message: ', ack.message.type, ack.message.uuid);
                             this.ws.send(JSON.stringify(ack.message));
                             ack.incrementAttempts();
                         }
@@ -133,7 +139,5 @@ function app() {
 
 }
 
-const main = app();
-main.init();
-let mainLoaded = new CustomEvent("socketSetLoaded", {detail: main});
-window.dispatchEvent(mainLoaded);
+let socketSetLoaded = new CustomEvent("socketSetLoaded", { detail: fantataSocketSet });
+window.dispatchEvent(socketSetLoaded);

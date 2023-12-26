@@ -35,16 +35,13 @@ class AcknowledgementBus {
             if (this.acks.size) {
                 this.acks.forEach((ack, key) => {
                     if (ack.attempts > 9) {
-                        //console.log('Ack not received: ', key);
                         this.acks.delete(key);
                     } else {
                         const client = this.clientBus.getClient(ack.clientId);
                         if (client) {
-                            //console.log('Resending msg: ', ack.message.type, ack.message.uuid);
                             this.clientBus.getClient(ack.clientId).resend(ack.message);
                             ack.incrementAttempts();
                         } else {
-                            //console.log('Client not found: ', ack.clientId);
                             this.acks.delete(key);
                         }
                     }
@@ -70,7 +67,6 @@ class AcknowledgementBus {
     removeAcknowledgement(uuid) {
         if (this.acks.has(uuid)) {
             this.acks.delete(uuid);
-            //console.log("Removed ack: ", uuid);
         }
     }
 

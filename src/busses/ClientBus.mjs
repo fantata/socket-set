@@ -46,7 +46,7 @@ class ClientBus {
      */
     removeClient(client) {
         this.clients.delete(client.id);
-        this.updateGroupMappings(client);        
+        //this.updateGroupMappings(client);        
     }
 
     /**
@@ -73,9 +73,9 @@ class ClientBus {
         const client = this.getClient(clientId);
         if (client) {
             client.setAttribute(key, value);
-            if (key === 'groups') {
-                this.updateGroupMappings(client);
-            }
+            // if (key === 'groups') {
+            //     this.updateGroupMappings(client);
+            // }
         }
     }
 
@@ -88,14 +88,15 @@ class ClientBus {
     /**
      * handle pickups from clients reconnecting
      * 
-     * @param {Client} client - The client picking up
      * @param {object} data - the message data
+     * @param {Client} client - The client picking up* 
      */    
-    handlePickup(client, data) {
+    handlePickup(data, client) {
         // TODO: migrate groups when pickup performed
         ClientBus.instance.removeClient(client);
         client.id = data.clientId;
         ClientBus.instance.addClient(client);
+        client.send('PICKEDUP');
     }    
 
     broadcast(type, data, senderId) {
