@@ -27,6 +27,12 @@ export default {
 
     sendToClient(clientId, type, stage) {
         WebSocketService.sendToClient(clientId, type, stage);
-    }
+    },
+
+    serverBroadcast(type, data) {
+        this.clients.forEach(client => {
+            client.send(type, data, crypto.randomUUID());
+        });
+    }    
 
 }

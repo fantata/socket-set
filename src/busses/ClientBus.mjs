@@ -96,7 +96,6 @@ class ClientBus {
         ClientBus.instance.removeClient(client);
         client.id = data.clientId;
         ClientBus.instance.addClient(client);
-        client.send('PICKEDUP');
     }    
 
     broadcast(type, data, senderId) {

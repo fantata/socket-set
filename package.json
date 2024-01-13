@@ -1,6 +1,6 @@
 {
   "name": "fantata-socket-set",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A simple module with client and server side components to send and acknowledge websocket messages",
   "main": "./src/server/server.mjs",
   "browser": "./src/browser/browser.mjs",
