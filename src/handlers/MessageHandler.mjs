@@ -39,7 +39,7 @@ class MessageHandler {
      * @returns {Promise<void>} A promise that resolves when the message is processed.
      */
     async processMessage(client, message) {
-        
+
         try {
 
             if (Buffer.isBuffer(message)) {

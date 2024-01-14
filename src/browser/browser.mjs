@@ -1,4 +1,26 @@
-import Acknowledgement from '../entities/Acknowledgement.mjs';
+class Acknowledgement {
+
+    clientId = null;
+    message = null;
+    attempts = 0;
+
+    constructor(message) {
+        if (typeof window == 'undefined') {
+            this.clientId = message.clientId;
+        }
+        this.message = message;
+    }
+
+    incrementAttempts() {
+        this.attempts++;
+    }
+
+    static create(message) {
+        return new Acknowledgement(message);
+    }    
+
+}
+
 let clientId = null;
 const $ = document.querySelector.bind(document);
 
@@ -15,13 +37,28 @@ const fantataSocketSet = function() {
 
             clientId = localStorage.getItem('clientId');
 
-            if (clientId) {
-                this.wsSend({type: "PICKUP", clientId: clientId});
-                this.addListener('PICKEDUP', () => {
-                    let clientLoaded = new CustomEvent("clientReady");
-                    window.dispatchEvent(clientLoaded);                                  
-                });
-            }
+            this.ws.addEventListener('open', (event) => {
+                //console.log('WebSocket connection opened:', event);
+                if (clientId) {
+                    this.wsSend({type: "PICKUP", clientId: clientId});
+                    this.addListener('PICKEDUP', () => {
+                        let clientLoaded = new CustomEvent("clientReady");
+                        window.dispatchEvent(clientLoaded);                                  
+                    });
+                }
+            });
+
+            this.ws.addEventListener('error', (error) => {
+                //console.error('WebSocket error:', error);
+            });
+
+            this.ws.addEventListener('message', (message) => {
+                //console.log('WebSocket message received:', message);
+            });
+
+            this.ws.addEventListener('close', (event) => {
+                //console.log('WebSocket connection closed:', event);
+            });
 
             this.addListener('clientId', (vals) => {
 
@@ -108,14 +145,16 @@ const fantataSocketSet = function() {
         
         wsSend(msg) {
 
+            //console.log(this.ws.readyState, msg)
+
             msg.uuid = crypto.randomUUID();
             msg.clientId = localStorage.getItem('clientId');
             
             if (msg.type !== 'ACK') {
                 this.acks.push(Acknowledgement.create(msg));
             }
-            
-            if(this.ws.readyState==1) {             
+
+            if(this.ws.readyState==1) {
                 this.ws.send(JSON.stringify(msg));
             }
             

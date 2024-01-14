@@ -24,7 +24,11 @@ class WebSocketService {
 
     sendToClient(clientId, type, data) {
         ClientBus.getClient(clientId).send(type, data);
-    }	
+    }
+
+	serverBroadcast(type, data) {
+		ClientBus.broadcast(type, data);
+	}	
 
 }
 

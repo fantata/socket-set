@@ -30,9 +30,7 @@ export default {
     },
 
     serverBroadcast(type, data) {
-        this.clients.forEach(client => {
-            client.send(type, data, crypto.randomUUID());
-        });
+        WebSocketService.serverBroadcast(type, data);
     }    
 
 }
