@@ -31,6 +31,10 @@ export default {
 
     serverBroadcast(type, data) {
         WebSocketService.serverBroadcast(type, data);
-    }    
+    },
+
+    getClientCount() {
+        return WebSocketService.getClientCount();
+    }
 
 }

@@ -23,6 +23,8 @@ class Acknowledgement {
 
 let clientId = null;
 const $ = document.querySelector.bind(document);
+var reconnectInterval = 1000;
+const maxReconnectInterval = 30000; 
 
 const fantataSocketSet = function() {
     return {
@@ -32,13 +34,17 @@ const fantataSocketSet = function() {
         eventHandlers: {},
         ws: null,
         init(url) {
+
+            console.log('Init WS connection');
+
             this.ws = new WebSocket(url);
             this.procAcks();
 
             clientId = localStorage.getItem('clientId');
 
             this.ws.addEventListener('open', (event) => {
-                //console.log('WebSocket connection opened:', event);
+                console.log('WebSocket connection opened:', event);
+                reconnectInterval = 1000;
                 if (clientId) {
                     this.wsSend({type: "PICKUP", clientId: clientId});
                     this.addListener('PICKEDUP', () => {
@@ -49,15 +55,19 @@ const fantataSocketSet = function() {
             });
 
             this.ws.addEventListener('error', (error) => {
-                //console.error('WebSocket error:', error);
+                console.error('WebSocket error:', error);
             });
 
-            this.ws.addEventListener('message', (message) => {
-                //console.log('WebSocket message received:', message);
-            });
+            // this.ws.addEventListener('message', (message) => {
+            //     console.log('WebSocket message received:', message);
+            // });
 
             this.ws.addEventListener('close', (event) => {
-                //console.log('WebSocket connection closed:', event);
+                console.log('Disconnected. Attempting to reconnect...' + reconnectInterval);
+                setTimeout(() => {
+                    this.init(url);
+                }, reconnectInterval);
+                reconnectInterval = Math.min(reconnectInterval * 2, maxReconnectInterval);
             });
 
             this.addListener('clientId', (vals) => {

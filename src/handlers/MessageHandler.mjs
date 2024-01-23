@@ -28,6 +28,10 @@ class MessageHandler {
      * @param {function} callback - The callback function to execute when the message is received.
      */
     addListener(code, callback) {
+        if (this.listeners[code] && this.listeners[code] === callback) {
+            console.log(`Listener for code '${code}' is already added.`);
+            return;            
+        }
         this.listeners[code] = callback;
     }
 
